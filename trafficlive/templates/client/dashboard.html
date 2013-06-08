@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+Welcome {{ employee.first_name }} {{ employee.last_name }}
+<div>
+    {% for entry in time_entries %}
+    <div>{{ entry }}</div>
+    {% empty %}
+    <div>Oh Noes! No time entries yet</div>
+    {% endfor %}
+</div>
+{% endblock %}
