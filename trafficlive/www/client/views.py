@@ -23,7 +23,11 @@ class Dashboard(TemplateView):
                                                    week_start,
                                                    week_end,
                                                    window_size=100)
+        time_allocations, page = user.get_time_allocations(client.connection)
+        import ipdb
+        ipdb.set_trace()
         context['employee'] = user
         context['time_entries'] = time_entries
+        context['time_allocations'] = time_allocations
         return context
 

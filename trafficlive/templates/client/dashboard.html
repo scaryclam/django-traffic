@@ -7,5 +7,11 @@ Welcome {{ employee.first_name }} {{ employee.last_name }}
     {% empty %}
     <div>Oh Noes! No time entries yet</div>
     {% endfor %}
+    <h2>Time Allocations</h2>
+    {% for allocation in time_allocations %}
+    <div>{{ allocation }}</div>
+    {% empty %}
+    <div>Lucky you! no work booked!</div>
+    {% endfor %}
 </div>
 {% endblock %}
