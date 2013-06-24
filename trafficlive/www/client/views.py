@@ -19,10 +19,10 @@ class Dashboard(TemplateView):
 
         week_start = datetime.now() - timedelta(days=datetime.now().isoweekday() - 1)
         week_end = week_start + timedelta(days=7)
-        time_entries, page = user.get_time_entries(client.connection,
-                                                   week_start,
-                                                   week_end,
-                                                   window_size=100)
+        time_entries = user.get_time_entries(client.connection,
+                                             week_start,
+                                             week_end,
+                                             window_size=100)
         context['employee'] = user
         context['time_entries'] = time_entries
         return context
