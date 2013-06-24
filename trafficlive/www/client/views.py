@@ -19,13 +19,15 @@ class Dashboard(TemplateView):
 
         week_start = datetime.now() - timedelta(days=datetime.now().isoweekday() - 1)
         week_end = week_start + timedelta(days=7)
-        time_entries, page = user.get_time_entries(client.connection,
-                                                   week_start,
-                                                   week_end,
-                                                   window_size=100)
+
+        time_entries = user.get_time_entries(client.connection,
+                                             week_start,
+                                             week_end,
+                                             window_size=100)
         time_allocations, page = user.get_time_allocations(client.connection)
         import ipdb
         ipdb.set_trace()
+
         context['employee'] = user
         context['time_entries'] = time_entries
         context['time_allocations'] = time_allocations
