@@ -1,0 +1,5 @@
+django
+simplejson
+requests
+django-extensions
+Werkzeug
