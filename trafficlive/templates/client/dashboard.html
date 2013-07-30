@@ -8,8 +8,9 @@ Welcome {{ employee.first_name }} {{ employee.last_name }}
     <div>Oh Noes! No time entries yet</div>
     {% endfor %}
     <h2>Time Allocations</h2>
-    {% for allocation in time_allocations %}
-    <div>{{ allocation }}</div>
+    {% for allocation in calendar_allocation_blocks %}
+    <div>{{ allocation.description }} - {{ allocation.earliest_interval_start}} - {{ allocation.latest_interval_end }}</div>
+    <div>{{ allocation.allocation_intervals }}</div>
     {% empty %}
     <div>Lucky you! no work booked!</div>
     {% endfor %}
