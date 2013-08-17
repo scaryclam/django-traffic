@@ -16,9 +16,14 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
     <div class="tab-pane" id="time-entries">
         <h2>Time Entries</h2>
         <h3>Time entries for the period {{ time_entries_start }} - {{ time_entries_end }}</h3>
-        {% for entry in time_entries %}
-        <div>
-            {% include 'client/partials/time_entry.html' %}
+        {% for day,entries in time_entries_by_day.iteritems %}
+        <div id="day-{{ day }}">
+            <h4>{{ day }}</h4>
+            {% for entry in entries %}
+            <div>
+                {% include 'client/partials/time_entry.html' %}
+            </div>
+            {% endfor %}
         </div>
         {% empty %}
         <div>Oh Noes! No time entries yet</div>

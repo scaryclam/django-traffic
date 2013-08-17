@@ -18,6 +18,4 @@ urlpatterns = patterns('',
     url(r'^login/$', LoginView.as_view(), {}, name='auth_login'),
     url(r'^logout/$', auth_views.logout,
         {'next_page': reverse_lazy('auth_login')}, name='auth_logout'),
-
 )
-

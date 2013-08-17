@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from collections import OrderedDict
 
 from django.views.generic import View, TemplateView, FormView
 from django.http import HttpResponse
@@ -34,14 +35,27 @@ class Dashboard(TemplateView):
                                                            window_size=100)
         job_tasks = user.get_job_task_allocations(client.connection,
                                                   window_size=100)
+        time_entries_by_day = self.group_time_entries(time_entries)
 
         context['employee'] = user
-        context['time_entries'] = time_entries
+        context['time_entries_by_day'] = time_entries_by_day
         context['time_entries_start'] = week_start.strftime('%Y-%m-%d')
         context['time_entries_end'] = week_end.strftime('%Y-%m-%d')
         context['time_allocations'] = time_allocations
         context['job_tasks'] = job_tasks
         return context
+
+    def group_time_entries(self, time_entries):
+        groups = OrderedDict()
+
+        for time_entry in time_entries:
+            key = datetime.strptime(
+                time_entry.start_time, '%Y-%m-%dT%H:%M:%S.000+0000').strftime('%Y-%m-%d')
+            if not groups.get(key):
+                groups[key] = []
+            groups[key].append(time_entry)
+
+        return groups
 
 
 class LoginView(FormView):
