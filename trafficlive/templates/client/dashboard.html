@@ -1,17 +1,46 @@
 {% extends "base.html" %}
 {% block content %}
 Welcome {{ employee.first_name }} {{ employee.last_name }}
-<div>
-    {% for entry in time_entries %}
-    <div>{{ entry }}</div>
-    {% empty %}
-    <div>Oh Noes! No time entries yet</div>
-    {% endfor %}
-    <h2>Time Allocations</h2>
-    {% for allocation in time_allocations %}
-    <div>{{ allocation }}</div>
-    {% empty %}
-    <div>Lucky you! no work booked!</div>
-    {% endfor %}
+<ul class="nav nav-tabs" data-tabs="tabs">
+    <li class="active"><a data-toggle="tab" href="#profile">Profile</a></li>
+    <li><a data-toggle="tab" href="#time-entries">Time Entries</a></li>
+    <li><a data-toggle="tab" href="#jobs">Jobs</a></li>
+</ul>
+<div id="tab-content" class="tab-content">
+    <div class="tab-pane active" id="profile">
+        <h1>Profile ({{ employee.staff_id }})</h1>
+        <div><b>Name: </b>{{ employee.first_name }} {{ employee.last_name }}</div>
+        <div><b>Job Title: </b>{{ employee.job_title }}</div>
+        <div><b>Email Address: </b>{{ employee.username }}</div>
+    </div>
+    <div class="tab-pane" id="time-entries">
+        <h2>Time Entries</h2>
+        <h3>Time entries for the period {{ time_entries_start }} - {{ time_entries_end }}</h3>
+        {% for entry in time_entries %}
+        <div>
+            {% include 'client/partials/time_entry.html' %}
+        </div>
+        {% empty %}
+        <div>Oh Noes! No time entries yet</div>
+        {% endfor %}
+    </div>
+    <div class="tab-pane" id="jobs">
+        <h1>Jobs</h1>
+        {% for task in job_tasks %}
+        <div>
+            <h4>{{ task.jobNumberSearchWrapper }}</h4>
+            <ul>
+                <li>Job Name: {{ task.jobName }}</li>
+                <li>Client Name: {{ task.clientName }}</li>
+                <li>Task Complete: {{ task.isTaskComplete }}</li>
+                <li>Job Id: {{ task.jobId }}</li>
+                <li>Task Id: {{ task.id }}</li>
+                <li>JobTask Id: {{ task.jobTaskId }}</li>
+            </ul>
+        </div>
+        {% empty %}
+        <div>Lucky you! No work booked!</div>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

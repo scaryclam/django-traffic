@@ -24,12 +24,15 @@ class Dashboard(TemplateView):
                                              week_start,
                                              week_end,
                                              window_size=100)
-        time_allocations, page = user.get_time_allocations(client.connection)
-        import ipdb
-        ipdb.set_trace()
+        time_allocations, page = user.get_time_allocations(client.connection,
+                                                           window_size=100)
+        job_tasks = user.get_job_task_allocations(client.connection,
+                                                  window_size=100)
 
         context['employee'] = user
         context['time_entries'] = time_entries
+        context['time_entries_start'] = week_start.strftime('%Y-%m-%d')
+        context['time_entries_end'] = week_end.strftime('%Y-%m-%d')
         context['time_allocations'] = time_allocations
+        context['job_tasks'] = job_tasks
         return context
-
