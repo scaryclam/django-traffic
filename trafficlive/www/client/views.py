@@ -1,8 +1,14 @@
 from datetime import datetime, timedelta
 
-from django.views.generic import View, TemplateView
+from django.views.generic import View, TemplateView, FormView
 from django.http import HttpResponse
 from django.conf import settings
+from django.contrib.auth.views import REDIRECT_FIELD_NAME
+from django.contrib.auth import login
+from django.contrib.auth.forms import AuthenticationForm
+from django.utils.http import is_safe_url
+from django.shortcuts import resolve_url, HttpResponseRedirect
+from django.core.urlresolvers import reverse
 
 from trafficlive.client import Client
 
@@ -36,3 +42,26 @@ class Dashboard(TemplateView):
         context['time_allocations'] = time_allocations
         context['job_tasks'] = job_tasks
         return context
+
+
+class LoginView(FormView):
+    template_name = 'client/login.html'
+    form_class = AuthenticationForm
+
+    def post(self, request, *args, **kwargs):
+        return super(LoginView, self).post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        redirect_to = self.get_success_url()
+        if not is_safe_url(url=redirect_to, host=self.request.get_host()):
+            redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
+        login(self.request, form.get_user())
+
+        return HttpResponseRedirect(redirect_to)
+
+    def get_success_url(self):
+        if self.request.GET.get(REDIRECT_FIELD_NAME, False):
+            redirect = resolve_url(self.request.GET[REDIRECT_FIELD_NAME])
+        else:
+            redirect = reverse('dashboard')
+        return redirect
