@@ -52,8 +52,9 @@ class Dashboard(TemplateView):
             key = datetime.strptime(
                 time_entry.start_time, '%Y-%m-%dT%H:%M:%S.000+0000').strftime('%Y-%m-%d')
             if not groups.get(key):
-                groups[key] = []
-            groups[key].append(time_entry)
+                groups[key] = {'time_entries': [], 'total_minutes': 0}
+            groups[key]['time_entries'].append(time_entry)
+            groups[key]['total_minutes'] += time_entry.minutes
 
         return groups
 
