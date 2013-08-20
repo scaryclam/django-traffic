@@ -17,8 +17,11 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
         <h2>Time Entries</h2>
         <h3>Time entries for the period {{ time_entries_start }} - {{ time_entries_end }}</h3>
         {% for day,entry_dict in time_entries_by_day.iteritems %}
-        <div id="day-{{ day }}">
+        <div id="day-{{ day }}" class="well">
             <h4>{{ day }} ({{ entry_dict.total_minutes }} minutes)</h4>
+	    <div class="controls">
+		<a class="btn btn-primary btn-small" href="#search_job_modal" data-toggle="modal">Add Time Entry</a>
+	    </div>
             {% for entry in entry_dict.time_entries %}
             <div>
                 {% include 'client/partials/time_entry.html' %}
@@ -47,5 +50,49 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
         <div>Lucky you! No work booked!</div>
         {% endfor %}
     </div>
+    <div id="search_job_modal" aria-labelledby="search_job_title"  class="modal hide fade" tabindex="-1" role="dialog">
+	<div class="modal-header">
+	    <a data-dismiss="modal" class="close" href="#">×</a>
+	    <h3>Search for a Job</h3>
+	</div>
+	<div class="modal-body">
+	    <div class="job_number_search">
+	        <form id="search_job_number" action="{% url 'job_search_ajax' %}" method="post">
+		    {% csrf_token %}
+		    <input type="text" name="job_number" id="job_number" /> <a id="job_search_btn" class="btn info" href="#">Search</a>
+		</form>
+		<div id="job_modal_container">
+		</div>
+	    </div>
+	</div>
+	<div class="modal-footer">
+	    <a href="#" class="btn" data-dismiss="modal">Cancel</a>
+	</div>
+    </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+$("#job_search_btn").click(function(event) {
+    event.preventDefault();
+    $("#search_job_number").submit();
+});
+
+$("#search_job_number").submit(function(event) {
+    event.preventDefault();
+    var url = $(this).attr("action");
+    var payload = $(this).serialize();
+    $.post(url, payload, function (data) {
+        $.each(data, function(index, item) {
+	    var item_html = "<div><ul>";
+	    item_html += "<li>Job #: " + item.job_number + "</li>";
+	    item_html += "<li>Job Name: " + item.name + "</li>";
+	    item_html += "<li>Job Description: " + item.description + "</li>";
+	    item_html += "<li>Owner Project: " + item.owner_project_id + "</li>";
+	    item_html += "</ul></div>";
+	    $("#job_modal_container").append(item_html);
+	});
+    }, 'json');
+});
+</script>
 {% endblock %}

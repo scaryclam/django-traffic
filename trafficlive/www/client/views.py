@@ -1,7 +1,8 @@
+import json
 from datetime import datetime, timedelta
 from collections import OrderedDict
 
-from django.views.generic import View, TemplateView, FormView
+from django.views.generic import View, TemplateView, FormView, View
 from django.http import HttpResponse
 from django.conf import settings
 from django.contrib.auth.views import REDIRECT_FIELD_NAME
@@ -80,3 +81,22 @@ class LoginView(FormView):
         else:
             redirect = reverse('dashboard')
         return redirect
+
+
+class SearchJobNumbers(View):
+    def post(self, request, *args, **kwargs):
+        client = Client(settings.TRAFFIC_API_KEY,
+                        self.request.user.username)
+        job_number = request.POST.get('job_number', '')
+        if not job_number.startswith('J'):
+            job_number = 'J%s' % job_number
+        filter_str = 'jobNumber|EQ|"%s"' % job_number
+        job_list = client.get_job_list(filter_by=filter_str)
+        json_data = []
+        for job in job_list[0]:
+            job.get_job_detail(client.connection)
+            json_data.append({'job_number': job.job_number,
+                              'name': job.job_detail.name,
+                              'description': job.job_detail.description,
+                              'owner_project_id': job.job_detail.owner_project_id})
+        return HttpResponse(json.dumps(json_data))
