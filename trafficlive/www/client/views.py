@@ -28,7 +28,7 @@ class Dashboard(TemplateView):
                 filter_by='emailAddress|EQ|"%s"' % self.request.user.username)[0][0]
 
         week_start = datetime.now() - timedelta(days=datetime.now().isoweekday() - 1)
-        week_end = week_start + timedelta(days=7)
+        week_end = week_start + timedelta(days=5)
 
         time_entries = user.get_time_entries(client.connection,
                                              week_start,
@@ -38,7 +38,7 @@ class Dashboard(TemplateView):
                                                            window_size=100)
         job_tasks = user.get_job_task_allocations(client.connection,
                                                   window_size=100)
-        time_entries_by_day = self.group_time_entries(time_entries)
+        time_entries_by_day = self.group_time_entries(time_entries, week_start)
 
         context['employee'] = user
         context['time_entries_by_day'] = time_entries_by_day
@@ -48,12 +48,21 @@ class Dashboard(TemplateView):
         context['job_tasks'] = job_tasks
         return context
 
-    def group_time_entries(self, time_entries):
-        groups = OrderedDict()
+    def group_time_entries(self, time_entries, start_day, days=5):
+        # Creates an OrderedDict containing n days of empty lists.
+        # E.g. OrderedDict([('2013-08-19', []), ('2013-08-20', [])])
+        groups = OrderedDict(
+            [((start_day + timedelta(days=num)).strftime('%Y-%m-%d'), []) for num in xrange(5)])
 
         for time_entry in time_entries:
-            key = datetime.strptime(
-                time_entry.start_time, '%Y-%m-%dT%H:%M:%S.000+0000').strftime('%Y-%m-%d')
+            time_entry_start_dt = datetime.strptime(
+                time_entry.start_time, '%Y-%m-%dT%H:%M:%S.000+0000')
+            time_entry_end_dt = datetime.strptime(
+                time_entry.end_time, '%Y-%m-%dT%H:%M:%S.000+0000')
+            time_entry.date = time_entry_start_dt.strftime('%Y-%m-%d')
+            time_entry.start = time_entry_start_dt.strftime('%H:%M:%S')
+            time_entry.end = time_entry_end_dt.strftime('%H:%M:%S')
+            key = time_entry_start_dt.strftime('%Y-%m-%d')
             if not groups.get(key):
                 groups[key] = {'time_entries': [], 'total_minutes': 0}
             groups[key]['time_entries'].append(time_entry)

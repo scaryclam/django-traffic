@@ -19,9 +19,9 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
         {% for day,entry_dict in time_entries_by_day.iteritems %}
         <div id="day-{{ day }}" class="well">
             <h4>{{ day }} ({{ entry_dict.total_minutes }} minutes)</h4>
-	    <div class="controls">
-		<a class="btn btn-primary btn-small" href="#search_job_modal" data-toggle="modal">Add Time Entry</a>
-	    </div>
+            <div class="controls">
+                <a class="btn btn-primary btn-small" href="#search_job_modal" data-toggle="modal">Add Time Entry</a>
+            </div>
             {% for entry in entry_dict.time_entries %}
             <div class="timeentry">
                 {% include 'client/partials/time_entry.html' %}
@@ -51,45 +51,45 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
         {% endfor %}
     </div>
     <div id="search_job_modal" aria-labelledby="search_job_title"  class="modal hide fade" tabindex="-1" role="dialog">
-		<div class="modal-header">
-			<a data-dismiss="modal" class="close" href="#">×</a>
-			<h3>Search for a Job</h3>
-		</div>
-		<div class="modal-body">
-			<div class="job_number_search">
-				<form id="search_job_number" action="{% url 'job_search_ajax' %}" method="post">
-					{% csrf_token %}
-					<input type="text" name="job_number" id="job_number" /> <a id="job_search_btn" class="btn info" href="#">Search</a>
-				</form>
-				<div id="job_modal_container">
-				</div>
-			</div>
-		</div>
-		<div class="modal-footer">
-			<a href="#" class="btn" data-dismiss="modal">Cancel</a>
-		</div>
+        <div class="modal-header">
+            <a data-dismiss="modal" class="close" href="#">×</a>
+            <h3>Search for a Job</h3>
+        </div>
+        <div class="modal-body">
+            <div class="job_number_search">
+                <form id="search_job_number" action="{% url 'job_search_ajax' %}" method="post">
+                    {% csrf_token %}
+                    <input type="text" name="job_number" id="job_number" /> <a id="job_search_btn" class="btn info" href="#">Search</a>
+                </form>
+                <div id="job_modal_container">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn" data-dismiss="modal">Cancel</a>
+        </div>
     </div>
-	<div id="update_job_modal" aria-labelledby="update_job_title"  class="modal hide fade" tabindex="-1" role="dialog">
-		<div class="modal-header">
-			<a data-dismiss="modal" class="close" href="#">×</a>
-			<h3>Update Time Entry</h3>
-		</div>
-		<div class="modal-body">
-			<div class="job_update">
-				<form id="update_job_form" action="{% url 'job_update_ajax' %}" method="post">
-					{% csrf_token %}
-					<input type="text" name="start_dt" id="start_dt" />
-					<input type="text" name="end_dt" id="end_dt" />
-					<input type="hidden" name="time_entry_id" id="time_entry_id" />
-					<a id="job_update_btn" class="btn info" href="#">Update</a>
-				</form>
-				<div id="job_update_container">
-				</div>
-			</div>
-		</div>
-		<div class="modal-footer">
-			<a href="#" class="btn" data-dismiss="modal">Cancel</a>
-		</div>
+    <div id="update_job_modal" aria-labelledby="update_job_title"  class="modal hide fade" tabindex="-1" role="dialog">
+        <div class="modal-header">
+            <a data-dismiss="modal" class="close" href="#">×</a>
+            <h3>Update Time Entry</h3>
+        </div>
+        <div class="modal-body">
+            <div class="job_update">
+                <form id="update_job_form" action="{% url 'job_update_ajax' %}" method="post">
+                    {% csrf_token %}
+                    <input type="text" name="start_dt" id="start_dt" />
+                    <input type="text" name="end_dt" id="end_dt" />
+                    <input type="hidden" name="time_entry_id" id="time_entry_id" />
+                    <a id="job_update_btn" class="btn info" href="#">Update</a>
+                </form>
+                <div id="job_update_container">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn" data-dismiss="modal">Cancel</a>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -104,21 +104,21 @@ $("#search_job_number").submit(function(event) {
     event.preventDefault();
     var url = $(this).attr("action");
     var payload = $(this).serialize();
-	$("#job_modal_container").empty();
+        $("#job_modal_container").empty();
     $.post(url, payload, function (data) {
-	    if (data['job_html_frags'].length === 0) {
-		    var item_html = "<div>No jobs could be found</div>";
-			$("#job_modal_container").append(item_html);
-		} else {
-			$.each(data['job_html_frags'], function(index, item) {
-				$("#job_modal_container").append(item);
-			});
-			$("a.show_form").click(function(event) {
-				event.preventDefault();
-				$('.add_time').hide();
-				$(this).parent().siblings('.add_time').show();
-			});
-		}
+        if (data['job_html_frags'].length === 0) {
+            var item_html = "<div>No jobs could be found</div>";
+                $("#job_modal_container").append(item_html);
+        } else {
+            $.each(data['job_html_frags'], function(index, item) {
+                $("#job_modal_container").append(item);
+            });
+            $("a.show_form").click(function(event) {
+                event.preventDefault();
+                $('.add_time').hide();
+                $(this).parent().siblings('.add_time').show();
+            });
+        }
     }, 'json');
 });
 
@@ -135,9 +135,9 @@ $("#update_job_form").submit(function(event) {
     event.preventDefault();
     var url = $(this).attr("action");
     var payload = $(this).serialize();
-	$("#job_update_container").empty();
+        $("#job_update_container").empty();
     $.post(url, payload, function (data) {
-	    alert("Success");
+        alert("Success");
     }, 'json');
 });
 </script>
