@@ -5,3 +5,13 @@ div#content {
 div#tab-content {
     padding-left: 30px;
 }
+
+div.timeentry {
+    margin-top: 5px;
+    border-color: #a3a3a3;
+    border-style: solid;
+    border-width: 2px;
+    padding: 6px;
+    min-width: 300px;
+    width: 60%;
+}

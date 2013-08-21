@@ -11,6 +11,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.utils.http import is_safe_url
 from django.shortcuts import resolve_url, HttpResponseRedirect
 from django.core.urlresolvers import reverse
+from django.template.loader import render_to_string
 
 from trafficlive.client import Client
 
@@ -21,7 +22,8 @@ class Dashboard(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(Dashboard, self).get_context_data(**kwargs)
         client = Client(settings.TRAFFIC_API_KEY,
-                        self.request.user.username)
+                        self.request.user.username,
+                        base_url=settings.TRAFFIC_BASE_URL)
         user = client.get_employee_list(
                 filter_by='emailAddress|EQ|"%s"' % self.request.user.username)[0][0]
 
@@ -86,17 +88,41 @@ class LoginView(FormView):
 class SearchJobNumbers(View):
     def post(self, request, *args, **kwargs):
         client = Client(settings.TRAFFIC_API_KEY,
-                        self.request.user.username)
+                        request.user.username,
+                        base_url=settings.TRAFFIC_BASE_URL)
         job_number = request.POST.get('job_number', '')
         if not job_number.startswith('J'):
             job_number = 'J%s' % job_number
         filter_str = 'jobNumber|EQ|"%s"' % job_number
         job_list = client.get_job_list(filter_by=filter_str)
-        json_data = []
+        json_data = {'job_html_frags': []}
         for job in job_list[0]:
             job.get_job_detail(client.connection)
-            json_data.append({'job_number': job.job_number,
-                              'name': job.job_detail.name,
-                              'description': job.job_detail.description,
-                              'owner_project_id': job.job_detail.owner_project_id})
+            html_frag = render_to_string(
+                "client/partials/job_description.html", {'job': job})
+            json_data['job_html_frags'].append(html_frag)
+        return HttpResponse(json.dumps(json_data))
+
+
+class UpdateTimeEntry(View):
+    def post(self, request, *args, **kwargs):
+        client = Client(settings.TRAFFIC_API_KEY,
+                        request.user.username,
+                        base_url=settings.TRAFFIC_BASE_URL)
+        start_dt = datetime.strptime(request.POST['start_dt'], "%Y-%m-%dT%H:%M:%S.000+0000")
+        end_dt = datetime.strptime(request.POST['end_dt'], "%Y-%m-%dT%H:%M:%S.000+0000")
+        seconds = (end_dt - start_dt).seconds
+        if seconds > 0:
+            minutes = seconds / 60
+        else:
+            minutes = 0
+        time_entry_id = request.POST['time_entry_id']
+
+        time_entry = client.get_time_entry(time_entry_id)
+        time_entry.start_time = request.POST['start_dt']
+        time_entry.end_time = request.POST['end_dt']
+        time_entry.minutes = minutes
+        time_entry.date_modified = None
+        response = client.update_time_entry(time_entry)
+        json_data = {}
         return HttpResponse(json.dumps(json_data))

@@ -1,0 +1,24 @@
+<div class="well">
+    <div><b>Job: </b>{{ job.job_number }}</div>
+    <div><b>Job Name: </b>{{ job.job_detail.name }}</div>
+    <div><b>Description: </b>{{ job.job_detail.description }}</div>
+    <ul>
+    {% for task in job.job_tasks %}
+        <li>
+            <form name="time_entry_form_{{ task.task_id }}" method="post" action=".">
+                <div>{{ task.description }} <a class="show_form" href="#">&gt;</a></div>
+                <div class="add_time" id="add_time_{{ job.job_id }}" style="display: none;">
+                    <p>Add some time for this job</p>
+                    <p>Start: <input type="text" name="start_date" id="start_date" /></p>
+                    <p>End: <input type="text" name="end_date" id="end_date" /><p>
+                    <p>
+                        <input type="hidden" id="task_desc" value="{{ task.description }}" />
+                        <input type="hidden" id="job_id" value="{{ job.job_id }}" />
+                    </p>
+                    <p><button type="submit" name="submit">Add Time</button></p>
+                </div>
+            </form>
+        </li>
+    {% endfor %}
+    </ul>
+</div>

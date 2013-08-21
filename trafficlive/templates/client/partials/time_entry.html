@@ -2,3 +2,6 @@
 <div><b>Job ID: </b>{{ entry.job_id }}</div>
 <div><b>Start Time: </b>{{ entry.start_time }}</div>
 <div><b>End Time: </b>{{ entry.end_time }}</div>
+<div class="controls">
+<a class="btn btn-info btn-small update_time_entry" href="#update_job_modal" data-toggle="modal" data-pk="{{ entry.time_entry_id }}">Update</a> <a class="btn btn-danger btn-small" href="#">Delete</a>
+</div>
