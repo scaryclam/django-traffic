@@ -69,28 +69,6 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
             <a href="#" class="btn" data-dismiss="modal">Cancel</a>
         </div>
     </div>
-    <div id="update_job_modal" aria-labelledby="update_job_title"  class="modal hide fade" tabindex="-1" role="dialog">
-        <div class="modal-header">
-            <a data-dismiss="modal" class="close" href="#">×</a>
-            <h3>Update Time Entry</h3>
-        </div>
-        <div class="modal-body">
-            <div class="job_update">
-                <form id="update_job_form" action="{% url 'job_update_ajax' %}" method="post">
-                    {% csrf_token %}
-                    <input type="text" name="start_dt" id="start_dt" />
-                    <input type="text" name="end_dt" id="end_dt" />
-                    <input type="hidden" name="time_entry_id" id="time_entry_id" />
-                    <a id="job_update_btn" class="btn info" href="#">Update</a>
-                </form>
-                <div id="job_update_container">
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <a href="#" class="btn" data-dismiss="modal">Cancel</a>
-        </div>
-    </div>
 </div>
 {% endblock %}
 {% block extra_js %}
@@ -122,16 +100,12 @@ $("#search_job_number").submit(function(event) {
     }, 'json');
 });
 
-$(".update_time_entry").click(function(event) {
-    $("input#time_entry_id").val($(this).attr('data-pk'));
-});
-
 $("#job_update_btn").click(function(event) {
     event.preventDefault();
     $("#update_job_form").submit();
 });
 
-$("#update_job_form").submit(function(event) {
+$("form[name=update_entry_form]").submit(function(event) {
     event.preventDefault();
     var url = $(this).attr("action");
     var payload = $(this).serialize();

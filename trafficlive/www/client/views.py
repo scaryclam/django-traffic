@@ -118,8 +118,12 @@ class UpdateTimeEntry(View):
         client = Client(settings.TRAFFIC_API_KEY,
                         request.user.username,
                         base_url=settings.TRAFFIC_BASE_URL)
-        start_dt = datetime.strptime(request.POST['start_dt'], "%Y-%m-%dT%H:%M:%S.000+0000")
-        end_dt = datetime.strptime(request.POST['end_dt'], "%Y-%m-%dT%H:%M:%S.000+0000")
+        start = "%sT%s.000+0000" % (request.POST['time_entry_day'],
+                                    request.POST['start_time'])
+        end = "%sT%s.000+0000" % (request.POST['time_entry_day'],
+                                  request.POST['end_time'])
+        start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S.000+0000")
+        end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S.000+0000")
         seconds = (end_dt - start_dt).seconds
         if seconds > 0:
             minutes = seconds / 60
@@ -128,8 +132,8 @@ class UpdateTimeEntry(View):
         time_entry_id = request.POST['time_entry_id']
 
         time_entry = client.get_time_entry(time_entry_id)
-        time_entry.start_time = request.POST['start_dt']
-        time_entry.end_time = request.POST['end_dt']
+        time_entry.start_time = start
+        time_entry.end_time = end
         time_entry.minutes = minutes
         time_entry.date_modified = None
         response = client.update_time_entry(time_entry)
