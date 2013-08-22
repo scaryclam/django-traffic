@@ -53,8 +53,13 @@ class Dashboard(TemplateView):
         # E.g. OrderedDict([('2013-08-19', []), ('2013-08-20', [])])
         groups = OrderedDict(
             [((start_day + timedelta(days=num)).strftime('%Y-%m-%d'), []) for num in xrange(5)])
+        client = Client(settings.TRAFFIC_API_KEY,
+                        self.request.user.username,
+                        base_url=settings.TRAFFIC_BASE_URL)
+
 
         for time_entry in time_entries:
+            job = client.get_job_id(time_entry.job_id)
             time_entry_start_dt = datetime.strptime(
                 time_entry.start_time, '%Y-%m-%dT%H:%M:%S.000+0000')
             time_entry_end_dt = datetime.strptime(
@@ -62,6 +67,7 @@ class Dashboard(TemplateView):
             time_entry.date = time_entry_start_dt.strftime('%Y-%m-%d')
             time_entry.start = time_entry_start_dt.strftime('%H:%M:%S')
             time_entry.end = time_entry_end_dt.strftime('%H:%M:%S')
+            time_entry.job_number = job.job_number
             key = time_entry_start_dt.strftime('%Y-%m-%d')
             if not groups.get(key):
                 groups[key] = {'time_entries': [], 'total_minutes': 0}

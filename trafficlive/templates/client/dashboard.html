@@ -18,7 +18,7 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
         <h3>Time entries for the period {{ time_entries_start }} - {{ time_entries_end }}</h3>
         {% for day,entry_dict in time_entries_by_day.iteritems %}
         <div id="day-{{ day }}" class="well">
-            <h4>{{ day }} ({{ entry_dict.total_minutes }} minutes)</h4>
+            <h4>{{ day }} ({% if entry_dict.total_minutes %}{{ entry_dict.total_minutes }}{% else %}0{% endif %} minutes)</h4>
             <div class="controls">
                 <a class="btn btn-primary btn-small" href="#search_job_modal" data-toggle="modal">Add Time Entry</a>
             </div>
