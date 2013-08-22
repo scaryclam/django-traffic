@@ -5,17 +5,25 @@
     <ul>
     {% for task in job.job_tasks %}
         <li>
-            <form name="time_entry_form_{{ task.task_id }}" method="post" action=".">
+            <form name="time_entry_form_{{ task.id }}" class="time_entry_form" method="post" action="{% url 'job_time_create_ajax' %}">
+                {% csrf_token %}
                 <div>{{ task.description }} <a class="show_form" href="#">&gt;</a></div>
                 <div class="add_time" id="add_time_{{ job.job_id }}" style="display: none;">
                     <p>Add some time for this job</p>
-                    <p>Start: <input type="text" name="start_date" id="start_date" /></p>
-                    <p>End: <input type="text" name="end_date" id="end_date" /><p>
+                    <p>Start: {{ day }} <input type="text" name="start_time" id="start_time" /></p>
+                    <p>End: {{ day }} <input type="text" name="end_time" id="end_time" /><p>
                     <p>
-                        <input type="hidden" id="task_desc" value="{{ task.description }}" />
-                        <input type="hidden" id="job_id" value="{{ job.job_id }}" />
+                        <input type="hidden" id="task_desc" name="task_desc" value="{{ task.description }}" />
+                        <input type="hidden" id="job_id" name="job_id" value="{{ job.job_id }}" />
+                        <input type="hidden" id="job_day" name="job_day" value="{{ day }}" />
+                        <input type="hidden" id="task_id" name="task_id" value="{{ task.id }}" />
+                        <input type="hidden" id="charge_band" name="charge_band" value="{{ task.chargeBandId.id }}" />
+                        <input type="hidden" id="task_rate" name="task_rate" value="{{ task.rate.amountString }}|{{ task.rate.currencyType }}" />
+                        <input type="hidden" id="task_cost" name="task_cost" value="{{ task.cost.amountString }}|{{ task.cost.currencyType }}" />
+                        <input type="hidden" id="entry_value" name="entry_value" value="{{ task.cost.amountString }}|{{ task.cost.currencyType }}" />
+                        <input type="hidden" id="personal_rate" name="personal_rate" value="{{ task.totalTimeEntryPersonalRate.amountString }}|{{ task.totalTimeEntryPersonalRate.currencyType }}" />
                     </p>
-                    <p><button type="submit" name="submit">Add Time</button></p>
+                    <p><button type="submit" class="time_entry_submit" name="submit">Add Time</button></p>
                 </div>
             </form>
         </li>

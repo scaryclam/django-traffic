@@ -129,6 +129,9 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django_extensions',
+    'south',
+    'www.apps.client',
+    'www.apps.user',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -159,6 +162,8 @@ LOGGING = {
         },
     }
 }
+
+AUTH_PROFILE_MODULE = "user.UserProfile"
 
 TRAFFIC_API_KEY = ''
 TRAFFIC_BASE_URL = ''

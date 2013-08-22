@@ -12,8 +12,10 @@ from django.utils.http import is_safe_url
 from django.shortcuts import resolve_url, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
+from django.template import RequestContext
 
-from trafficlive.client import Client
+from trafficlive.client import Client, TimeEntry
+from www.apps.user.models import UserProfile
 
 
 class Dashboard(TemplateView):
@@ -89,6 +91,20 @@ class LoginView(FormView):
         if not is_safe_url(url=redirect_to, host=self.request.get_host()):
             redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
         login(self.request, form.get_user())
+        try:
+            profile = UserProfile.objects.get(user=self.request.user.pk)
+            if profile.employee_id:
+                return HttpResponseRedirect(redirect_to)
+        except UserProfile.DoesNotExist:
+            profile = UserProfile(user=self.request.user)
+        # The employee id is not set. Do this before continuing
+        client = Client(settings.TRAFFIC_API_KEY,
+                        self.request.user.username,
+                        base_url=settings.TRAFFIC_BASE_URL)
+        user = client.get_employee_list(
+            filter_by='emailAddress|EQ|"%s"' % self.request.user.username)[0][0]
+        profile.employee_id = user.staff_id
+        profile.save()
 
         return HttpResponseRedirect(redirect_to)
 
@@ -113,8 +129,10 @@ class SearchJobNumbers(View):
         json_data = {'job_html_frags': []}
         for job in job_list[0]:
             job.get_job_detail(client.connection)
+            context = RequestContext(request, {'job': job,
+                                               'day': request.POST['job_day']})
             html_frag = render_to_string(
-                "client/partials/job_description.html", {'job': job})
+                "client/partials/job_description.html", context)
             json_data['job_html_frags'].append(html_frag)
         return HttpResponse(json.dumps(json_data))
 
@@ -145,3 +163,53 @@ class UpdateTimeEntry(View):
         response = client.update_time_entry(time_entry)
         json_data = {}
         return HttpResponse(json.dumps(json_data))
+
+
+class CreateTimeEntry(View):
+    def post(self, request, *args, **kwargs):
+        start_val = request.POST['start_time']
+        end_val = request.POST['end_time']
+        day = request.POST['job_day']
+        employee_id = request.user.get_profile().employee_id
+        start_dt = datetime.strptime("%sT%s.000+0000" % (day, start_val),
+                                     "%Y-%m-%dT%H:%M:%S.000+0000")
+        end_dt = datetime.strptime("%sT%s.000+0000" % (day, end_val),
+                                   "%Y-%m-%dT%H:%M:%S.000+0000")
+        minutes = (end_dt - start_dt).seconds / 60
+        data = {
+            'jobId': {'id': request.POST['job_id']},
+            'id': "-1",
+            'version': "-1",
+            'dateModified': None,
+            'jobTaskId': {'id': request.POST['task_id']},
+            'billable': False,
+            'exported': False,
+            'lockedByApproval': False,
+            'comment': None,
+            'endTime': "%sT%s.000+0000" % (day, end_val),
+            'minutes': minutes,
+            'trafficEmployeeId': {'id': employee_id},
+            'taskDescription': request.POST['task_desc'],
+            'taskComplete': None,
+            'taskRate': {'amountString': request.POST['task_rate'].split('|')[0],
+                         'currencyType': request.POST['task_rate'].split('|')[1]},
+            'valueOfTimeEntry': {'amountString': 0,#request.POST['entry_value'].split('|')[0],
+                                 'currencyType': "GBP"},#request.POST['entry_value'].split('|')[1]},
+            'chargeBandId': {'id': request.POST['charge_band']},
+            'timeEntryCost': {'amountString': request.POST['task_cost'].split('|')[0],
+                              'currencyType': request.POST['task_cost'].split('|')[1]},
+            'timeEntryPersonalRate': {'amountString': request.POST['personal_rate'].split('|')[0],
+                                      'currencyType': request.POST['personal_rate'].split('|')[1]},
+            'jobStageDescription': None,
+            'lockedByApprovalEmployeeId': None,
+            'lockedByApprovalDate': None,
+            'exportError': None,
+            'workPoints': None,
+            'startTime': "%sT%s.000+0000" % (day, start_val),
+        }
+        client = Client(settings.TRAFFIC_API_KEY,
+                        request.user.username,
+                        base_url=settings.TRAFFIC_BASE_URL)
+        time_entry = TimeEntry(data)
+        new_time_entry = client.send_new_time_entry(time_entry)
+        return HttpResponse("Thanks")
