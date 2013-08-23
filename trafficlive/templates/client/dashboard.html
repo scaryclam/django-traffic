@@ -18,14 +18,12 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
         <h3>Time entries for the period {{ time_entries_start }} - {{ time_entries_end }}</h3>
         {% for day,entry_dict in time_entries_by_day.iteritems %}
         <div id="day-{{ day }}" class="well">
-            <h4>{{ day }} ({% if entry_dict.total_minutes %}{{ entry_dict.total_minutes }}{% else %}0{% endif %} minutes)</h4>
+            <h4>{{ day }} (<span id="total_minutes_{{ day }}">{% if entry_dict.total_minutes %}{{ entry_dict.total_minutes }}{% else %}0{% endif %}</span> minutes)</h4>
             <div class="controls">
                 <a class="btn btn-primary btn-small add-time-entry" href="#search_job_modal" data-toggle="modal" data-day="{{ day }}">Add Time Entry</a>
             </div>
             {% for entry in entry_dict.time_entries %}
-            <div class="timeentry">
                 {% include 'client/partials/time_entry.html' %}
-            </div>
             {% endfor %}
         </div>
         {% empty %}
@@ -67,7 +65,7 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
             </div>
         </div>
         <div class="modal-footer">
-            <a href="#" class="btn" data-dismiss="modal">Cancel</a>
+            <a href="#" class="btn" data-dismiss="modal">Done</a>
         </div>
     </div>
 </div>
@@ -97,6 +95,7 @@ $("#search_job_number").submit(function(event) {
                 $('.add_time').hide();
                 $(this).parent().siblings('.add_time').show();
             });
+            $("form.time_entry_form").bind('submit', submitTimeEntryForm);
         }
     }, 'json');
 });
@@ -110,15 +109,19 @@ $("#job_update_btn").click(function(event) {
     $("#update_job_form").submit();
 });
 
-$("form.time_entry_form").submit(function(event) {
+function submitTimeEntryForm(event) {
     event.preventDefault();
     var url = $(this).attr("action");
     var payload = $(this).serialize();
 
     $.post(url, payload, function(data) {
-        alert("Success");
+        var minutes = +$("span#total_minutes_" + data.day).html();
+        $("#day-" + data.day).append(data.html);
+        $("span#total_minutes_" + data.day).html(minutes + +data.minutes);
     }, 'json');
-});
+}
+
+$("form.time_entry_form").submit(submitTimeEntryForm);
 
 $("form[name=update_entry_form]").submit(function(event) {
     event.preventDefault();
@@ -126,7 +129,10 @@ $("form[name=update_entry_form]").submit(function(event) {
     var payload = $(this).serialize();
         $("#job_update_container").empty();
     $.post(url, payload, function(data) {
-        alert("Success");
+        // The addition of '+' at the beginning of the numbers is to ensure they
+        // are treated as numbers, not strings.
+        var minutes = +$("span#total_minutes_" + data.day).html();
+        $("span#total_minutes_" + data.day).html(minutes + +data.minutes);
     }, 'json');
 });
 </script>

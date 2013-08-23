@@ -156,12 +156,14 @@ class UpdateTimeEntry(View):
         time_entry_id = request.POST['time_entry_id']
 
         time_entry = client.get_time_entry(time_entry_id)
+        prev_minutes = time_entry.minutes
         time_entry.start_time = start
         time_entry.end_time = end
         time_entry.minutes = minutes
         time_entry.date_modified = None
         response = client.update_time_entry(time_entry)
-        json_data = {}
+        json_data = {'day': request.POST['time_entry_day'],
+                     'minutes': minutes - prev_minutes}
         return HttpResponse(json.dumps(json_data))
 
 
@@ -211,5 +213,16 @@ class CreateTimeEntry(View):
                         request.user.username,
                         base_url=settings.TRAFFIC_BASE_URL)
         time_entry = TimeEntry(data)
-        new_time_entry = client.send_new_time_entry(time_entry)
-        return HttpResponse("Thanks")
+        new_time_entry = TimeEntry(
+            json.loads(client.send_new_time_entry(time_entry)))
+        new_time_entry.start = start_val
+        new_time_entry.end = end_val
+        new_time_entry.minutes = minutes
+        job = client.get_job_id(new_time_entry.job_id)
+        new_time_entry.job_number = job.job_number
+        context = RequestContext(request, {'entry': new_time_entry,
+                                           'day': request.POST['job_day']})
+        html_frag = render_to_string(
+            "client/partials/time_entry.html", context)
+        return HttpResponse(json.dumps({'html': html_frag, 'day': day,
+                                        'minutes': minutes}))
