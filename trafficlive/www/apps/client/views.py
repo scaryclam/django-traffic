@@ -243,10 +243,16 @@ class CreateTimeEntry(View):
         end_val = request.POST['end_time']
         day = request.POST['job_day']
         employee_id = request.user.get_profile().employee_id
-        start_dt = datetime.strptime("%sT%s.000+0000" % (day, start_val),
-                                     "%Y-%m-%dT%H:%M:%S.000+0000")
-        end_dt = datetime.strptime("%sT%s.000+0000" % (day, end_val),
-                                   "%Y-%m-%dT%H:%M:%S.000+0000")
+        try:
+            start_dt = datetime.strptime("%sT%s.000+0000" % (day, start_val),
+                                         "%Y-%m-%dT%H:%M:%S.000+0000")
+        except:
+            pass
+        try:
+            end_dt = datetime.strptime("%sT%s.000+0000" % (day, end_val),
+                                       "%Y-%m-%dT%H:%M:%S.000+0000")
+        except:
+            pass
         minutes = (end_dt - start_dt).seconds / 60
         data = {
             'jobId': {'id': request.POST['job_id']},
