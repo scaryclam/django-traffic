@@ -69,6 +69,10 @@ function getTimeEntryList(data) {
     $('#prev-button').attr('data-end', data.prev_period.end);
     $('#next-button').attr('data-start', data.next_period.start);
     $('#next-button').attr('data-end', data.next_period.end);
+    // Bind things
+    $(".add-time-entry").click(function(event) {
+        $("input#job_day").val($(this).attr('data-day'));
+    });
 }
 
 $(".get_time_entry_list").click(function(event) {
@@ -99,10 +103,6 @@ $("#search_job_number").submit(function(event) {
             $("form.time_entry_form").bind('submit', submitTimeEntryForm);
         }
     }, 'json');
-});
-
-$(".add-time-entry").click(function(event) {
-    $("input#job_day").val($(this).attr('data-day'));
 });
 
 $("#job_update_btn").click(function(event) {
