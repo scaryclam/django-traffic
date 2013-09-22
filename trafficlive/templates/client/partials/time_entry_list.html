@@ -1,0 +1,13 @@
+{% for day,entry_dict in time_entries_by_day.iteritems %}
+<div id="day-{{ day }}" class="well">
+    <h4>{{ day }} (<span id="total_minutes_{{ day }}">{% if entry_dict.total_minutes %}{{ entry_dict.total_minutes }}{% else %}0{% endif %}</span> minutes)</h4>
+    <div class="controls">
+        <a class="btn btn-primary btn-small add-time-entry" href="#search_job_modal" data-toggle="modal" data-day="{{ day }}">Add Time Entry</a>
+    </div>
+    {% for entry in entry_dict.time_entries %}
+        {% include 'client/partials/time_entry.html' %}
+    {% endfor %}
+</div>
+{% empty %}
+<div>Oh Noes! No time entries yet</div>
+{% endfor %}

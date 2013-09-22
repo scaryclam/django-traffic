@@ -1,0 +1,15 @@
+{% for task in job_tasks %}
+<div>
+    <h4>{{ task.jobNumberSearchWrapper }}</h4>
+    <ul>
+        <li>Job Name: {{ task.jobName }}</li>
+        <li>Client Name: {{ task.clientName }}</li>
+        <li>Task Complete: {{ task.isTaskComplete }}</li>
+        <li>Job Id: {{ task.jobId }}</li>
+        <li>Task Id: {{ task.id }}</li>
+        <li>JobTask Id: {{ task.jobTaskId }}</li>
+    </ul>
+</div>
+{% empty %}
+<div>Lucky you! No work booked!</div>
+{% endfor %}

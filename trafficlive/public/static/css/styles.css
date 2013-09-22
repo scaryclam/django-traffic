@@ -15,3 +15,8 @@ div.timeentry {
     min-width: 300px;
     width: 60%;
 }
+
+img.spinner {
+    display: none;
+    max-height: 35px;
+}

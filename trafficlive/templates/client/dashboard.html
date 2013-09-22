@@ -14,39 +14,16 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
         <div><b>Email Address: </b>{{ employee.username }}</div>
     </div>
     <div class="tab-pane active" id="time-entries">
-        <h2>Time Entries</h2>
-        <h3>Time entries for the period {{ time_entries_start }} - {{ time_entries_end }}</h3>
-        {% for day,entry_dict in time_entries_by_day.iteritems %}
-        <div id="day-{{ day }}" class="well">
-            <h4>{{ day }} (<span id="total_minutes_{{ day }}">{% if entry_dict.total_minutes %}{{ entry_dict.total_minutes }}{% else %}0{% endif %}</span> minutes)</h4>
-            <div class="controls">
-                <a class="btn btn-primary btn-small add-time-entry" href="#search_job_modal" data-toggle="modal" data-day="{{ day }}">Add Time Entry</a>
-            </div>
-            {% for entry in entry_dict.time_entries %}
-                {% include 'client/partials/time_entry.html' %}
-            {% endfor %}
+        <h2>Time Entries <img class="spinner" src="/static/img/spinner.gif" id="time_entry_spin" /></h2>
+        <div>
+            <button class="btn small get_time_entry_list" id="prev-button" data-start='' data-end=''>Older</button> Time entries for the period <span id="period_start">{{ time_entries_start }}</span> - 
+            <span id="period_end">{{ time_entries_end }}</span> <button class="btn small get_time_entry_list next" data-start='' data-end=''>Newer</button> <button id="end-button" class="btn small warn refresh_time_entry_list">Refresh</button>
         </div>
-        {% empty %}
-        <div>Oh Noes! No time entries yet</div>
-        {% endfor %}
+        <span id="time_entry_container"></span>
     </div>
     <div class="tab-pane" id="jobs">
         <h1>Jobs</h1>
-        {% for task in job_tasks %}
-        <div>
-            <h4>{{ task.jobNumberSearchWrapper }}</h4>
-            <ul>
-                <li>Job Name: {{ task.jobName }}</li>
-                <li>Client Name: {{ task.clientName }}</li>
-                <li>Task Complete: {{ task.isTaskComplete }}</li>
-                <li>Job Id: {{ task.jobId }}</li>
-                <li>Task Id: {{ task.id }}</li>
-                <li>JobTask Id: {{ task.jobTaskId }}</li>
-            </ul>
-        </div>
-        {% empty %}
-        <div>Lucky you! No work booked!</div>
-        {% endfor %}
+        {% include "client/partials/job_task_list_user.html" %}
     </div>
     <div id="search_job_modal" aria-labelledby="search_job_title"  class="modal hide fade" tabindex="-1" role="dialog">
         <div class="modal-header">
@@ -75,6 +52,30 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
 $("#job_search_btn").click(function(event) {
     event.preventDefault();
     $("#search_job_number").submit();
+});
+
+$(".refresh_time_entry_list").click(function(event) {
+    $("#time_entry_spin").show();
+    $.get('/timeentry/list?period_start={{ time_entries_start }}&period_end={{ time_entries_end }}', '', getTimeEntryList, 'json');
+});
+
+function getTimeEntryList(data) {
+    $("#time_entry_spin").hide();
+    $("#time_entry_container").empty();
+    $("#time_entry_container").append(data.html);
+    $("#period_start").html(data.period_start);
+    $("#period_end").html(data.period_end);
+    $('#prev-button').attr('data-start', data.prev_period.start);
+    $('#prev-button').attr('data-end', data.prev_period.end);
+    $('#next-button').attr('data-start', data.next_period.start);
+    $('#next-button').attr('data-end', data.next_period.end);
+}
+
+$(".get_time_entry_list").click(function(event) {
+    event.preventDefault();
+    $("#time_entry_spin").show();
+    var url = '/timeentry/list?period_start=' + $(this).attr('data-start') + '&period_end=' + $(this).attr('data-end'); 
+    $.get(url, '', getTimeEntryList, 'json');
 });
 
 $("#search_job_number").submit(function(event) {
@@ -135,5 +136,8 @@ $("form[name=update_entry_form]").submit(function(event) {
         $("span#total_minutes_" + data.day).html(minutes + +data.minutes);
     }, 'json');
 });
+
+// Execute the first views
+$($(".refresh_time_entry_list")[0]).click();
 </script>
 {% endblock %}

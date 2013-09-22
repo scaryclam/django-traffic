@@ -18,6 +18,19 @@ from trafficlive.client import Client, TimeEntry
 from www.apps.user.models import UserProfile
 
 
+def get_time_period(request):
+    if request.GET.get('period_start', None):
+        period_start = datetime.strptime(request.GET['period_start'], "%Y-%m-%d")
+        if request.GET.get('period_end'):
+            period_end = datetime.strptime(request.GET['period_end'], "%Y-%m-%d")
+        else:
+            period_end = period_start + timedelta(days=5)
+    else:
+        period_start = datetime.now() - timedelta(days=datetime.now().isoweekday() - 1)
+        period_end = period_start + timedelta(days=5)
+    return period_start, period_end
+    
+
 class Dashboard(TemplateView):
     template_name = 'client/dashboard.html'
 
@@ -29,25 +42,83 @@ class Dashboard(TemplateView):
         user = client.get_employee_list(
                 filter_by='emailAddress|EQ|"%s"' % self.request.user.username)[0][0]
 
-        week_start = datetime.now() - timedelta(days=datetime.now().isoweekday() - 1)
-        week_end = week_start + timedelta(days=5)
+        period_start, period_end = get_time_period(self.request)
 
-        time_entries = user.get_time_entries(client.connection,
-                                             week_start,
-                                             week_end,
-                                             window_size=100)
         time_allocations, page = user.get_time_allocations(client.connection,
                                                            window_size=100)
         job_tasks = user.get_job_task_allocations(client.connection,
                                                   window_size=100)
-        time_entries_by_day = self.group_time_entries(time_entries, week_start)
-
         context['employee'] = user
-        context['time_entries_by_day'] = time_entries_by_day
-        context['time_entries_start'] = week_start.strftime('%Y-%m-%d')
-        context['time_entries_end'] = week_end.strftime('%Y-%m-%d')
+        context['time_entries_start'] = period_start.strftime('%Y-%m-%d')
+        context['time_entries_end'] = period_end.strftime('%Y-%m-%d')
         context['time_allocations'] = time_allocations
         context['job_tasks'] = job_tasks
+        return context
+
+
+class JobTaskListUserView(TemplateView):
+    template_name = "client/partials/job_task_list_user.html"
+
+    def get(self, request, *args, **kwargs):
+        ret_val = super(JobTaskListUserView, self).get_context_data(request, *args, **kwargs)
+        if not ret_val.is_rendered:
+            ret_val.render()
+        return HttpResponse(json.dumps({'html': ret_val.content}))
+
+    def get_context_data(self, **kwargs):
+        context = super(JobTaskListUserView, self).get_context_data(**kwargs)
+        user = client.get_employee_list(
+                filter_by='emailAddress|EQ|"%s"' % self.request.user.username)[0][0]
+        job_tasks = user.get_job_task_allocations(client.connection,
+                                                  window_size=100)
+        context['job_tasks'] = job_tasks
+        return context
+
+
+class TimeEntryListView(TemplateView):
+    template_name = "client/partials/time_entry_list.html"
+
+    def get(self, request, *args, **kwargs):
+        ret_val = super(TimeEntryListView, self).get(request, *args, **kwargs)
+        if not ret_val.is_rendered:
+            ret_val.render()
+        return HttpResponse(
+                json.dumps({'html': ret_val.content,
+                            'period_start': ret_val.context_data['time_entries_start'],
+                            'period_end': ret_val.context_data['time_entries_end'],
+                            'prev_period': {'start': ret_val.context_data['time_entries_prev_start'],
+                                            'end': ret_val.context_data['time_entries_prev_end']},
+                            'next_period': {'start': ret_val.context_data['time_entries_next_start'],
+                                            'end': ret_val.context_data['time_entries_next_end']}}))
+
+    def get_context_data(self, **kwargs):
+        context = super(TimeEntryListView, self).get_context_data(**kwargs)
+        client = Client(settings.TRAFFIC_API_KEY,
+                        self.request.user.username,
+                        base_url=settings.TRAFFIC_BASE_URL)
+        user = client.get_employee_list(
+                filter_by='emailAddress|EQ|"%s"' % self.request.user.username)[0][0]
+
+        period_start, period_end = get_time_period(self.request)
+        time_diff = period_end - period_start
+        next_end = period_end + time_diff
+        prev_start = period_start - time_diff
+
+        time_entries = user.get_time_entries(client.connection,
+                                             period_start,
+                                             period_end,
+                                             window_size=100)
+        job_tasks = user.get_job_task_allocations(client.connection,
+                                                  window_size=100)
+        time_entries_by_day = self.group_time_entries(time_entries, period_start)
+
+        context['time_entries_by_day'] = time_entries_by_day
+        context['time_entries_start'] = period_start.strftime('%Y-%m-%d')
+        context['time_entries_end'] = period_end.strftime('%Y-%m-%d')
+        context['time_entries_next_start'] = period_end.strftime('%Y-%m-%d')
+        context['time_entries_next_end'] = next_end.strftime("%Y-%m-%d")
+        context['time_entries_prev_start'] = prev_start.strftime('%Y-%m-%d')
+        context['time_entries_prev_end'] = period_start.strftime('%Y-%m-%d')
         return context
 
     def group_time_entries(self, time_entries, start_day, days=5):
@@ -58,7 +129,6 @@ class Dashboard(TemplateView):
         client = Client(settings.TRAFFIC_API_KEY,
                         self.request.user.username,
                         base_url=settings.TRAFFIC_BASE_URL)
-
 
         for time_entry in time_entries:
             job = client.get_job_id(time_entry.job_id)
