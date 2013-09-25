@@ -29,7 +29,7 @@ def get_time_period(request):
         period_start = datetime.now() - timedelta(days=datetime.now().isoweekday() - 1)
         period_end = period_start + timedelta(days=5)
     return period_start, period_end
-    
+
 
 class Dashboard(TemplateView):
     template_name = 'client/dashboard.html'
@@ -37,10 +37,10 @@ class Dashboard(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(Dashboard, self).get_context_data(**kwargs)
         client = Client(settings.TRAFFIC_API_KEY,
-                        self.request.user.username,
+                        self.request.user.email,
                         base_url=settings.TRAFFIC_BASE_URL)
         user = client.get_employee_list(
-                filter_by='emailAddress|EQ|"%s"' % self.request.user.username)[0][0]
+                filter_by='emailAddress|EQ|"%s"' % self.request.user.email)[0][0]
 
         period_start, period_end = get_time_period(self.request)
 
@@ -68,7 +68,7 @@ class JobTaskListUserView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(JobTaskListUserView, self).get_context_data(**kwargs)
         user = client.get_employee_list(
-                filter_by='emailAddress|EQ|"%s"' % self.request.user.username)[0][0]
+                filter_by='emailAddress|EQ|"%s"' % self.request.user.email)[0][0]
         job_tasks = user.get_job_task_allocations(client.connection,
                                                   window_size=100)
         context['job_tasks'] = job_tasks
@@ -94,10 +94,10 @@ class TimeEntryListView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(TimeEntryListView, self).get_context_data(**kwargs)
         client = Client(settings.TRAFFIC_API_KEY,
-                        self.request.user.username,
+                        self.request.user.email,
                         base_url=settings.TRAFFIC_BASE_URL)
         user = client.get_employee_list(
-                filter_by='emailAddress|EQ|"%s"' % self.request.user.username)[0][0]
+                filter_by='emailAddress|EQ|"%s"' % self.request.user.email)[0][0]
 
         period_start, period_end = get_time_period(self.request)
         time_diff = period_end - period_start
@@ -127,7 +127,7 @@ class TimeEntryListView(TemplateView):
         groups = OrderedDict(
             [((start_day + timedelta(days=num)).strftime('%Y-%m-%d'), []) for num in xrange(5)])
         client = Client(settings.TRAFFIC_API_KEY,
-                        self.request.user.username,
+                        self.request.user.email,
                         base_url=settings.TRAFFIC_BASE_URL)
 
         for time_entry in time_entries:
@@ -169,10 +169,10 @@ class LoginView(FormView):
             profile = UserProfile(user=self.request.user)
         # The employee id is not set. Do this before continuing
         client = Client(settings.TRAFFIC_API_KEY,
-                        self.request.user.username,
+                        self.request.user.email,
                         base_url=settings.TRAFFIC_BASE_URL)
         user = client.get_employee_list(
-            filter_by='emailAddress|EQ|"%s"' % self.request.user.username)[0][0]
+            filter_by='emailAddress|EQ|"%s"' % self.request.user.email)[0][0]
         profile.employee_id = user.staff_id
         profile.save()
 
@@ -189,7 +189,7 @@ class LoginView(FormView):
 class SearchJobNumbers(View):
     def post(self, request, *args, **kwargs):
         client = Client(settings.TRAFFIC_API_KEY,
-                        request.user.username,
+                        request.user.email,
                         base_url=settings.TRAFFIC_BASE_URL)
         job_number = request.POST.get('job_number', '')
         if not job_number.startswith('J'):
@@ -210,7 +210,7 @@ class SearchJobNumbers(View):
 class UpdateTimeEntry(View):
     def post(self, request, *args, **kwargs):
         client = Client(settings.TRAFFIC_API_KEY,
-                        request.user.username,
+                        request.user.email,
                         base_url=settings.TRAFFIC_BASE_URL)
         start = "%sT%s.000+0000" % (request.POST['time_entry_day'],
                                     request.POST['start_time'])
@@ -280,7 +280,7 @@ class CreateTimeEntry(View):
             'startTime': "%sT%s.000+0000" % (day, start_val),
         }
         client = Client(settings.TRAFFIC_API_KEY,
-                        request.user.username,
+                        request.user.email,
                         base_url=settings.TRAFFIC_BASE_URL)
         time_entry = TimeEntry(data)
         new_time_entry = TimeEntry(
