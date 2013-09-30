@@ -16,7 +16,7 @@ Welcome {{ employee.first_name }} {{ employee.last_name }} (<a href="/logout">lo
     <div class="tab-pane active" id="time-entries">
         <h2>Time Entries <img class="spinner" src="/static/img/spinner.gif" id="time_entry_spin" /></h2>
         <div>
-            <button class="btn small get_time_entry_list" id="prev-button" data-start='' data-end=''>Older</button> Time entries for the period <span id="period_start">{{ time_entries_start }}</span> - 
+            <button class="btn small get_time_entry_list" id="prev-button" data-start='' data-end=''>Older</button> Time entries for the period <span id="period_start">{{ time_entries_start }}</span> -
             <span id="period_end">{{ time_entries_end }}</span> <button class="btn small get_time_entry_list next" data-start='' data-end=''>Newer</button> <button id="end-button" class="btn small warn refresh_time_entry_list">Refresh</button>
         </div>
         <span id="time_entry_container"></span>
@@ -73,12 +73,29 @@ function getTimeEntryList(data) {
     $(".add-time-entry").click(function(event) {
         $("input#job_day").val($(this).attr('data-day'));
     });
+    $("form[name=update_entry_form]").submit(function(event) {
+        event.preventDefault();
+        var $this = $(this);
+        $this.find("img.spinner").show();
+        $this.find("button.update_time_entry").prop("disabled", true);
+        var url = $(this).attr("action");
+        var payload = $(this).serialize();
+            $("#job_update_container").empty();
+        $.post(url, payload, function(data) {
+            // The addition of '+' at the beginning of the numbers is to ensure they
+            // are treated as numbers, not strings.
+            $this.find("img.spinner").hide();
+            $this.find("button.update_time_entry").prop("disabled", false);
+            var minutes = +$("span#total_minutes_" + data.day).html();
+            $("span#total_minutes_" + data.day).html(minutes + +data.minutes);
+        }, 'json');
+    });
 }
 
 $(".get_time_entry_list").click(function(event) {
     event.preventDefault();
     $("#time_entry_spin").show();
-    var url = '/timeentry/list?period_start=' + $(this).attr('data-start') + '&period_end=' + $(this).attr('data-end'); 
+    var url = '/timeentry/list?period_start=' + $(this).attr('data-start') + '&period_end=' + $(this).attr('data-end');
     $.get(url, '', getTimeEntryList, 'json');
 });
 
@@ -123,19 +140,6 @@ function submitTimeEntryForm(event) {
 }
 
 $("form.time_entry_form").submit(submitTimeEntryForm);
-
-$("form[name=update_entry_form]").submit(function(event) {
-    event.preventDefault();
-    var url = $(this).attr("action");
-    var payload = $(this).serialize();
-        $("#job_update_container").empty();
-    $.post(url, payload, function(data) {
-        // The addition of '+' at the beginning of the numbers is to ensure they
-        // are treated as numbers, not strings.
-        var minutes = +$("span#total_minutes_" + data.day).html();
-        $("span#total_minutes_" + data.day).html(minutes + +data.minutes);
-    }, 'json');
-});
 
 // Execute the first views
 $($(".refresh_time_entry_list")[0]).click();

@@ -4,11 +4,11 @@
         <div><b>Job ID: </b>{{ entry.job_number }}</div>
         <div><b>Job Stage: </b>{{ entry.job_stage_description }}</div>
         <div><b>Start Time: </b><input type="text" name="start_time" id="start_dt" value="{{ entry.start }}" /></div>
-        <div><b>End Time: </b><input type="text" name="end_time" id="start_dt" value="{{ entry.end }}" /></div>
+        <div><b>End Time: </b><input type="text" name="end_time" id="end_dt" value="{{ entry.end }}" /></div>
         <input type="hidden" name="time_entry_id" id="time_entry_id" value="{{ entry.time_entry_id }}" />
         <input type="hidden" name="time_entry_day" id="time_entry_day" value="{{ day }}" />
         <div class="controls">
-        <button class="btn btn-info btn-small update_time_entry" type="submit">Update</button> {#<a class="btn btn-danger btn-small" href="#">Delete</a>#}
+        <button class="btn btn-info btn-small update_time_entry" type="submit">Update</button> <img class="spinner" src="/static/img/spinner.gif" />
         </div>
     </form>
 </div>
